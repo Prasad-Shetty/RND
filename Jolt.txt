@@ -1,0 +1,30 @@
+[{
+  "operation": "shift",
+  "spec": {
+    "data": {
+      "altitude": "MDT.altitude",
+      "powerStatus": "MDT.powerStatus",
+      "gpsAvailable": "MDT.gpsAvailable",
+      "accuracy": "MDT.accuracy",
+      "lon": "MDT.lon",
+      "lat": "MDT.lat",
+      "speed": "MDT.speed",
+      "workforceUserId":"MDT.workforceUserId",
+	  "simNo":"MDT.simNo",
+      "macId":"MDT.macId",
+      "date_time":"MDT.date_time",
+      "trackStatus":"MDT.trackStatus",
+      "trackAngle":"MDT.trackAngle",
+      "batteryLevel":"MDT.batteryLevel",
+      "packetType":"MDT.packetType",
+      "strengthAmplitude":"MDT.strengthAmplitude"
+	}
+  }
+}, {
+  "operation": "default",
+  "spec": {
+    "MDT": {
+      "place": "${location}"
+    }
+  }
+}]

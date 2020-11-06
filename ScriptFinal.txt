@@ -1,0 +1,61 @@
+import groovy.json.*;
+	import org.apache.commons.io.IOUtils;
+	import java.nio.charset.*;
+	import java.text.SimpleDateFormat;
+	import java.util.Date;
+	import java.sql.Timestamp
+	import org.json.JSONArray;
+	import org.json.JSONObject;
+
+	def flowFiles = [] as List<FlowFile>
+	def failflowFiles = [] as List<FlowFile>
+	def valid= true;
+
+	def flowFile = session.get();
+	if (flowFile == null) {
+	    return;
+	}
+	def finalJson=null;
+	def device_health=new JSONObject();
+	def inputStream = session.read(flowFile);
+	def writer = new StringWriter();
+		try {
+	          IOUtils.copy(inputStream, writer, "UTF-8");
+		  data=writer.toString();
+	          raw=data;
+		 inputStream.close();
+		  SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	          sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+		   Date date = new Date();
+	          JSONArray jsonObject=new JSONArray(data);
+	          finalJson=new JSONObject();
+	          for(int i=0;i<jsonObject.length();i++)
+	           {
+	            JSONObject inside=jsonObject.getJSONObject(i);
+	            if(inside.has("Device_ID"))
+	            {
+	            device_health.put("mac_id",inside.get("Device_ID").toString());
+		    device_health.put("status",inside.get("monitor-availability-status").toString().equals("Up")? true:false);
+		    device_health.put("date_time", sdf.format(date));
+	             device_health.put("tenantcode", "CSC");
+	             finalJson.put("device_health", device_health);
+	             def newFlowFile = session.create(flowFile);
+				 newFlowFile = session.write(newFlowFile, { outputStream -> 
+				outputStream.write( finalJson.toString().getBytes(StandardCharsets.UTF_8) )
+				} as OutputStreamCallback)
+				flowFiles << newFlowFile
+	            }
+	            } }
+		        catch(Exception e){
+				log.warn('Error inside'+e.getMessage());
+				valid=false;
+				def newFlowFile = session.create(flowFile);
+				newFlowFile = session.write(newFlowFile, { outputStream -> 
+				outputStream.write( raw.toString().getBytes(StandardCharsets.UTF_8) )
+				} as OutputStreamCallback)
+				failflowFiles << newFlowFile
+				}
+
+	session.transfer(flowFiles, REL_SUCCESS );
+	session.transfer(failflowFiles, REL_FAILURE)	;
+	session.remove(flowFile);
