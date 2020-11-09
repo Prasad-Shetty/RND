@@ -1,0 +1,54 @@
+import groovy.json.*;
+import java.text.*;
+import java.nio.charset.StandardCharsets;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+def jsonSlurper = new JsonSlurper()
+def finalJson = jsonSlurper.parseText('{}') 
+def content='';
+def sqlAttr=null;
+def flowFile = session.get();
+if (flowFile == null) {
+    return;
+}
+flowFile = session.write(flowFile,
+        { inputStream, outputStream ->
+	      def data= org.apache.commons.io.IOUtils.toString(inputStream, java.nio.charset.StandardCharsets.UTF_8);
+                // log.warn("data-----{}"+data);
+		JSONObject json=new JSONObject(data);
+		float ln=Float.parseFloat(json.getJSONObject("VGDATA").getString("LN"));
+		float lt=Float.parseFloat(json.getJSONObject("VGDATA").getString("LT"));
+              	String date_time=json.getJSONObject("VGDATA").getString("DATE_TIME");
+               float sp=Float.parseFloat(json.getJSONObject("VGDATA").getString("SP"));
+               int sosflag=0;
+               float trackangle=Float.parseFloat(json.getJSONObject("VGDATA").getString("Angle"));
+               	float  altitude=Float.parseFloat(json.getJSONObject("VGDATA").getString("Altitude"));
+                 float accuracy= 10.123;
+                int  Sattelite=Integer.parseInt(json.getJSONObject("VGDATA").getString("Sattelite"));
+                 int  BL=Math.round(Float.parseFloat(json.getJSONObject("VGDATA").getString("BL")));
+                    int  BH=Math.round(Float.parseFloat(json.getJSONObject("VGDATA").getString("BH")));
+                     int  packerversion=Integer.parseInt(json.getJSONObject("VGDATA").getString("PI"));
+                      int  AV=1;
+                String direction_ns=json.getJSONObject("VGDATA").getString("Direction_ns");
+                   String direction_ew=json.getJSONObject("VGDATA").getString("Direction_ew");
+                   String mac=json.getJSONObject("VGDATA").getString("IMEI");
+                       String location=json.getJSONObject("VGDATA").getString("location").replace("'","''");
+                      String pn=json.getJSONObject("VGDATA").getString("PN");
+                       String ip="";
+                       int stop_detected=0;
+                        String call_sign="";
+                        int  ps=Integer.parseInt(json.getJSONObject("VGDATA").getString("PS"));
+                         // String gprSpack="";
+                               String gsmsignal=json.getJSONObject("VGDATA").getString("GSMSIGNAL");
+                                String Valid=json.getJSONObject("VGDATA").getString("PV").equals("1")?"A":"V";
+				 String gprSpack=json.getJSONObject("VGDATA").getString("PT").equals("L")?"0":"1";
+
+		sqlAttr=String.format("EXEC dbo.f_device_store_packet_v5  '%s','%s',%s,%s,'%s',%s,%s,'%s',%s,%s,%s,%s,%s,'%s','%s','%s',%s,'%s',%s,'%s','%s',%s,%s,'%s','%s'",gprSpack,gsmsignal,lt,ln,date_time,sp,sosflag,Valid,trackangle,ps,altitude,accuracy,Sattelite,pn,direction_ns,direction_ew,BL,BH,AV,ip,location,stop_detected,packerversion,call_sign,mac);
+
+outputStream.write(content.getBytes(StandardCharsets.UTF_8))
+        } as StreamCallback)
+
+flowFile = session.putAttribute(flowFile, 'sqlAttr',sqlAttr);
+
+session.transfer(flowFile, ExecuteScript.REL_SUCCESS);
