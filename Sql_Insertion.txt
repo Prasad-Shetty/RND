@@ -12,10 +12,12 @@ def flowFile = session.get();
 if (flowFile == null) {
     return;
 }
+try {
 flowFile = session.write(flowFile,
         { inputStream, outputStream ->
 	      def data= org.apache.commons.io.IOUtils.toString(inputStream, java.nio.charset.StandardCharsets.UTF_8);
                 // log.warn("data-----{}"+data);
+				
 		JSONObject json=new JSONObject(data);
 		float ln=Float.parseFloat(json.getJSONObject("VGDATA").getString("LN"));
 		float lt=Float.parseFloat(json.getJSONObject("VGDATA").getString("LT"));
@@ -48,6 +50,10 @@ flowFile = session.write(flowFile,
 
 outputStream.write(content.getBytes(StandardCharsets.UTF_8))
         } as StreamCallback)
+		}
+		  catch(Exception e){
+		  log.warn('Error inside'+e.getMessage());
+		  }
 
 flowFile = session.putAttribute(flowFile, 'sqlAttr',sqlAttr);
 
