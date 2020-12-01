@@ -47,7 +47,7 @@ flowFile = session.write(flowFile,
 				 String gprSpack=json.getJSONObject("VGDATA").getString("PT").equals("L")?"0":"1";
 
 		sqlAttr=String.format("EXEC dbo.f_device_store_packet_v5  '%s','%s',%s,%s,'%s',%s,%s,'%s',%s,%s,%s,%s,%s,'%s','%s','%s',%s,'%s',%s,'%s','%s',%s,%s,'%s','%s'",gprSpack,gsmsignal,lt,ln,date_time,sp,sosflag,Valid,trackangle,ps,altitude,accuracy,Sattelite,pn,direction_ns,direction_ew,BL,BH,AV,ip,location,stop_detected,packerversion,call_sign,mac);
-
+//sqlAttr= 'INSERT INTO  dbo.BusLEDHealthStatus VALUES' + "("+" ' "+input.BUSLEDDATA.MAC+" ',"+"'"+input.BUSLEDDATA.DATE_TIME+" ' "+")";
 outputStream.write(content.getBytes(StandardCharsets.UTF_8))
         } as StreamCallback)
 		}
