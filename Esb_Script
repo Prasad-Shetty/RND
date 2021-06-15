@@ -1,0 +1,41 @@
+<inSequence>
+<property expression="$ctx:query.param.fromdate" name="from" scope="default" type="STRING"/>
+<property expression="$ctx:query.param.todate" name="to" scope="default" type="STRING"/>
+<property expression="$ctx:query.param.macid" name="mac" scope="default" type="STRING"/>
+<property expression="$ctx:query.param.columns" name="uri.var.columns" scope="default" type="STRING"/>
+<property expression="$ctx:query.param.limit" name="uri.var.limit" scope="default" type="STRING"/>
+<filter regex="false" source="boolean(get-property('from'))">
+<then>
+<script language="js"><![CDATA[var simpleDateFormat = Packages.java.text.SimpleDateFormat;
+var fomatter = new simpleDateFormat("yyyy-MM-dd HH:mm:ss");
+var TimeZone=Packages.java.util.TimeZone;
+fomatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+var date = Packages.java.util.Date;
+var currentDate = fomatter.format(new date());
+var fromDate = fomatter.parse(currentDate);
+var date1 = fromDate.getTime();
+print(date1);
+var beforedate=date1-60000;
+print(beforedate);
+mc.setProperty('date', date1.toString());
+mc.setProperty('beforedate', beforedate.toString());]]></script>
+<property expression="fn:concat(get-property('mac'),'/',get-property('beforedate'))" name="uri.var.from" scope="default" type="STRING"/>
+<property expression="fn:concat(get-property('mac'),'/',get-property('date'))" name="uri.var.to" scope="default" type="STRING"/>
+<property expression="get-property('mac')" name="uri.var.macId" scope="default" type="STRING"/>
+<log level="custom">
+<property expression="fn:concat(get-property('mac'),'/',get-property('beforedate'))" name="uri.var.from"/>
+<property expression="fn:concat(get-property('mac'),'/',get-property('date'))" name="uri.var.to"/>
+<property expression="get-property('mac')" name="uri.var.macId"/>
+</log>
+<!-- <header name="Content-Type" scope="transport" action="remove"/>
+<property name="Accept" value="application/json" scope="transport" type="STRING"/> -->
+<call>
+<endpoint>
+<http method="get" uri-template="http://10.67.169.26:9767/services/Environment/getEnvironmentData?fromdate={uri.var.from}&todate={uri.var.to}&limit=1&columns=CO2&macid={uri.var.macId}"/>
+</endpoint>
+</call>
+<property name="messageType" scope="axis2" type="STRING" value="application/json"/>
+<log>
+<property expression="json-eval($)" name="responce"/>
+</log>
+<respond/>
